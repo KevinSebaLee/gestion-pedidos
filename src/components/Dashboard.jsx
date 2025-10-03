@@ -3,6 +3,7 @@ import OrderStats from './OrderStats';
 import OrderFilter from './OrderFilter';
 import OrderList from './OrderList';
 import OrderForm from './OrderForm';
+import Pagination from './Pagination';
 import '../styles/Dashboard.css';
 
 const Dashboard = () => {
@@ -46,19 +47,61 @@ const Dashboard = () => {
         { name: 'Micrófono Blue Yeti', quantity: 1, price: 150.00 },
       ],
     },
+    {
+      id: 5,
+      customer: 'Pedro Rodríguez',
+      date: '2025-09-30',
+      status: 'shipped',
+      products: [
+        { name: 'SSD Samsung 1TB', quantity: 1, price: 180.00 },
+      ],
+    },
+    {
+      id: 6,
+      customer: 'Laura Fernández',
+      date: '2025-09-26',
+      status: 'delivered',
+      products: [
+        { name: 'Impresora HP', quantity: 1, price: 250.00 },
+        { name: 'Papel A4', quantity: 5, price: 8.00 },
+      ],
+    },
+    {
+      id: 7,
+      customer: 'Roberto Silva',
+      date: '2025-10-01',
+      status: 'pending',
+      products: [
+        { name: 'Router TP-Link', quantity: 1, price: 75.00 },
+      ],
+    },
+    {
+      id: 8,
+      customer: 'Carmen Díaz',
+      date: '2025-09-29',
+      status: 'shipped',
+      products: [
+        { name: 'Tablet Samsung', quantity: 1, price: 320.00 },
+        { name: 'Funda protectora', quantity: 1, price: 25.00 },
+      ],
+    },
   ]);
 
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [showForm, setShowForm] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
 
   const handleStatusChange = (status) => {
     setSelectedStatus(status);
+    setCurrentPage(1); // Resetear a la primera página al cambiar filtro
   };
 
   const handleAddOrder = (newOrder) => {
     setOrders([newOrder, ...orders]);
     setShowForm(false);
-    setSelectedStatus('all'); // Mostrar todos los pedidos después de agregar uno nuevo
+    setSelectedStatus('all');
+    setCurrentPage(1);
   };
 
   // Filtrar pedidos según el estado seleccionado
@@ -66,11 +109,22 @@ const Dashboard = () => {
     ? orders
     : orders.filter(order => order.status === selectedStatus);
 
+  // Calcular paginación
+  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedOrders = filteredOrders.slice(startIndex, endIndex);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <div className="dashboard">
       <header className="dashboard-header">
-        <h1>📦 Sistema de Gestión de Pedidos - MailAméricas</h1>
-        <p>Administra y visualiza todos tus pedidos de tiendas online</p>
+        <h1>Sistema de Gestión de Pedidos</h1>
+        <p>MailAméricas | Panel de Administración</p>
       </header>
 
       <OrderStats orders={orders} />
@@ -80,7 +134,7 @@ const Dashboard = () => {
           className="btn-toggle-form"
           onClick={() => setShowForm(!showForm)}
         >
-          {showForm ? '📋 Ver Pedidos' : '➕ Nuevo Pedido'}
+          {showForm ? '← Volver a Pedidos' : '+ Nuevo Pedido'}
         </button>
       </div>
 
@@ -94,14 +148,26 @@ const Dashboard = () => {
           />
           
           <div className="orders-section">
-            <h2>
-              {selectedStatus === 'all' ? '📋 Todos los Pedidos' : 
-               selectedStatus === 'pending' ? '⏳ Pedidos Pendientes' :
-               selectedStatus === 'shipped' ? '🚚 Pedidos Enviados' :
-               '✅ Pedidos Entregados'}
-              <span className="count">({filteredOrders.length})</span>
-            </h2>
-            <OrderList orders={filteredOrders} />
+            <div className="orders-header">
+              <h2>
+                {selectedStatus === 'all' ? 'Todos los Pedidos' : 
+                 selectedStatus === 'pending' ? 'Pedidos Pendientes' :
+                 selectedStatus === 'shipped' ? 'Pedidos Enviados' :
+                 'Pedidos Entregados'}
+              </h2>
+              <span className="orders-count">{filteredOrders.length} pedido{filteredOrders.length !== 1 ? 's' : ''}</span>
+            </div>
+            <OrderList orders={paginatedOrders} />
+            
+            {filteredOrders.length > itemsPerPage && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+                totalItems={filteredOrders.length}
+                itemsPerPage={itemsPerPage}
+              />
+            )}
           </div>
         </>
       )}
